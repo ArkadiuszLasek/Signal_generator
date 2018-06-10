@@ -12,21 +12,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.retranslateUi(self)
 
         # Setup operations.
-        self.pushButton_plot.clicked.connect(self.pushButton_plot_clicked)
+        self.pushButton_plot_signal.clicked.connect(self.pushButton_plot_signal_clicked)
 
         self.show()
 
 
     @pyqtSlot()
-    def pushButton_plot_clicked(self):
-        end_time = float(self.lineEdit_time.text())
-        amp = float(self.lineEdit_amp.text())
+    def pushButton_plot_signal_clicked(self):
+        end_time = float(self.doubleSpinBox_end_time.value())
+        amp = float(self.doubleSpinBox_amp.value())
+        sampling_rate = int(self.spinBox_sampling_rate.value())
+        freq = float(self.doubleSpinBox_freq.value())
 
         my_signal = SignalGen()
-        my_signal.time, my_signal.x = my_signal.create_data(end_time, amp)
-        my_signal.x_filtered = my_signal.smooth(my_signal.x, 9)
-        my_signal.x_filtered = my_signal.smooth(my_signal.x_filtered, 5)
-        my_signal.plot_signal(my_signal.time, my_signal.x, my_signal.x_filtered)
+        my_signal.time, my_signal.x = my_signal.create_data(sampling_rate, end_time, amp, freq)
+
+        if self.checkBox_add_noise.isChecked() == True:
+            noise_amp = float(self.doubleSpinBox_noise_amp.value())
+            std_deviation = float(self.doubleSpinBox_noise_deviation.value())
+
+            my_signal.x_noise = my_signal.create_noise_data(my_signal.x, my_signal.time, noise_amp, std_deviation)
+            my_signal.plot_signal(my_signal.time, my_signal.x_noise)
+        else:
+            my_signal.plot_signal(my_signal.time, my_signal.x)
 
 
 
@@ -34,7 +42,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 if __name__ == '__main__':
     app = QApplication([])
-    app.setApplicationName("Hello")
+    app.setApplicationName("Signal Generator")
 
     window = MainWindow()
     app.exec_()
